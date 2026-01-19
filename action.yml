@@ -1,0 +1,21 @@
+name: 'Your Action Name'
+description: 'A description of your action'
+author: 'Your Name'
+
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  example-input:
+    description: 'An example input parameter'
+    required: false
+    default: 'default value'
+
+outputs:
+  example-output:
+    description: 'An example output value'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

@@ -1,0 +1,40 @@
+{
+  "name": "github-action-ts-template",
+  "version": "1.0.0",
+  "description": "A template for creating GitHub Actions with TypeScript",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build src/main.ts -o dist --source-map --license licenses.txt",
+    "format": "prettier --write '**/*.ts'",
+    "format:check": "prettier --check '**/*.ts'",
+    "lint": "eslint src/**/*.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "all": "npm run format && npm run lint && npm run test && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/github-action-ts-template.git"
+  },
+  "keywords": [
+    "github-action",
+    "typescript",
+    "template"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vercel/ncc": "^0.38.1",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  }
+}
