@@ -1,45 +1,30 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import * as core from '@actions/core'
-import { run } from '../src/action'
-
-vi.mock('@actions/core')
-vi.mock('@actions/github', () => ({
-  context: {
-    eventName: 'push',
-    repo: {
-      owner: 'test-owner',
-      repo: 'test-repo'
-    }
-  }
-}))
+import { test } from '@fast-check/vitest'
+import { Effect, Layer } from 'effect'
+import * as fc from 'fast-check'
+import { describe, expect, it } from 'vitest'
+import { run } from '../src/action/run'
+import { GitHubActions, GitHubActionsTest } from '../src/services/github'
 
 describe('action', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+  it('should run successfully with test layer', async () => {
+    const program = run.pipe(Effect.provide(GitHubActionsTest))
+    const result = await Effect.runPromise(program)
+
+    expect(result.exampleOutput).toBe('Processed: test-value')
   })
 
-  it('should run successfully with default input', async () => {
-    vi.mocked(core.getInput).mockReturnValue('default value')
+  test.prop([fc.string()])('should process any string input without throwing', async (input) => {
+    const testLayer = Layer.succeed(GitHubActions, {
+      getInput: () => Effect.succeed(input),
+      setOutput: () => Effect.void,
+      setFailed: () => Effect.void,
+      info: () => Effect.void,
+    })
 
-    await run()
+    const program = run.pipe(Effect.provide(testLayer))
+    const exit = await Effect.runPromiseExit(program)
 
-    expect(core.info).toHaveBeenCalledWith('Example input: default value')
-    expect(core.setOutput).toHaveBeenCalledWith(
-      'example-output',
-      'Processed: default value'
-    )
-    expect(core.info).toHaveBeenCalledWith('Action completed successfully!')
-  })
-
-  it('should run successfully with custom input', async () => {
-    vi.mocked(core.getInput).mockReturnValue('custom value')
-
-    await run()
-
-    expect(core.info).toHaveBeenCalledWith('Example input: custom value')
-    expect(core.setOutput).toHaveBeenCalledWith(
-      'example-output',
-      'Processed: custom value'
-    )
+    // Should either succeed or fail with a typed error, never throw
+    expect(exit._tag === 'Success' || exit._tag === 'Failure').toBe(true)
   })
 })

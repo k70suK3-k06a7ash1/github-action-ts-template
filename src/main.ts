@@ -1,6 +1,15 @@
-import * as core from '@actions/core'
-import { run } from './action'
+import { Effect } from 'effect'
+import { run } from './action/run'
+import { GitHubActions, GitHubActionsLive } from './services/github'
 
-run().catch((error: Error) => {
-  core.setFailed(error.message)
-})
+const program = run.pipe(
+  Effect.catchAll((error) =>
+    Effect.gen(function* () {
+      const github = yield* GitHubActions
+      yield* github.setFailed(error.message)
+    })
+  ),
+  Effect.provide(GitHubActionsLive)
+)
+
+Effect.runPromise(program)
