@@ -13,6 +13,7 @@
 | [005](./005-workflow-dsl.md) | ワークフローDSL | Accepted | GitHub Actions YAML |
 | [006](./006-package-manager.md) | パッケージマネージャー | Accepted | npm |
 | [007](./007-project-scaffolding.md) | プロジェクト構成管理 | Accepted | 手動構成 |
+| [008](./008-ai-driven-architecture.md) | AI制御+関数型堅牢設計 | **Accepted** | Effect TS + XState + projen |
 
 ## ADRフォーマット
 
