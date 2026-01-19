@@ -1,138 +1,50 @@
-# 技術スタックの選定理由
+# 技術スタック選定サマリー
 
-このドキュメントでは、GitHub Action TypeScript テンプレートで採用した技術スタックの選定理由と、検討した代替案について説明します。
-
-## 1. バンドラー: @vercel/ncc
-
-### 採用理由
-
-- **GitHub公式推奨**: GitHub Actions の公式ドキュメントで推奨されている
-- **単一ファイル出力**: `node_modules` をコミットする必要がなく、dist フォルダに単一の `index.js` を生成
-- **TypeScript対応**: ビルド時にTypeScriptを直接コンパイル可能
-- **軽量**: 設定不要で即座に利用可能
-
-### 代替案
-
-| ツール | 特徴 | 不採用理由 |
-|--------|------|------------|
-| **esbuild** | 高速なバンドラー | 設定が必要、GitHub Actions での実績が ncc より少ない |
-| **webpack** | 高機能バンドラー | 設定が複雑、GitHub Actions には過剰 |
-| **rollup** | ES Module向けバンドラー | CommonJS出力にはnccの方がシンプル |
-| **node_modules をコミット** | バンドル不要 | リポジトリサイズが肥大化、依存関係の管理が煩雑 |
+詳細な意思決定記録は [docs/decisions/](./docs/decisions/) を参照してください。
 
 ---
 
-## 2. テストフレームワーク: Vitest
+## 採用技術
 
-### 採用理由
-
-- **高速**: esbuild ベースで Jest より高速
-- **Jest互換API**: Jest からの移行が容易
-- **TypeScript ネイティブサポート**: 追加設定なしでTypeScriptを実行可能
-- **モダン**: ESM ネイティブ対応、最新のテスト機能を提供
-- **設定がシンプル**: 最小限の設定で動作
-
-### 代替案
-
-| ツール | 特徴 | 不採用理由 |
-|--------|------|------------|
-| **Jest** | 最も普及しているテストフレームワーク | TypeScript設定が煩雑（ts-jest / babel必要）、起動が遅い |
-| **Mocha + Chai** | 柔軟なテストフレームワーク | アサーションライブラリが別途必要、設定が多い |
-| **Node.js test runner** | Node.js組み込み | 機能が限定的、モックが弱い |
+| カテゴリ | 採用 | 代替案 | ADR |
+|----------|------|--------|-----|
+| Action実装タイプ | TypeScript Action | Docker, Composite | [001](./docs/decisions/001-action-type.md) |
+| バンドラー | @vercel/ncc | esbuild, webpack | [002](./docs/decisions/002-bundler.md) |
+| テスト | Vitest | Jest, Node.js test | [003](./docs/decisions/003-testing.md) |
+| Lint/Format | ESLint + Prettier | Biome | [004](./docs/decisions/004-linting.md) |
+| ワークフローDSL | GitHub Actions YAML | Dagger, CUE | [005](./docs/decisions/005-workflow-dsl.md) |
+| パッケージマネージャー | npm | pnpm, yarn, bun | [006](./docs/decisions/006-package-manager.md) |
+| プロジェクト構成 | 手動 | projen, Nx | [007](./docs/decisions/007-project-scaffolding.md) |
 
 ---
 
-## 3. リンター: ESLint
+## 構成方針
 
-### 採用理由
+### 現在の構成（安定性重視）
 
-- **業界標準**: JavaScript/TypeScript のリンティングにおける事実上の標準
-- **豊富なルールとプラグイン**: TypeScript用の公式プラグインが充実
-- **IDE統合**: VS Code等との統合が優れている
+```
+@vercel/ncc + ESLint + Prettier + Vitest + npm + 手動構成
+```
 
-### 代替案
+- GitHub公式推奨ツール
+- 業界標準、情報が豊富
+- 追加依存が少ない
 
-| ツール | 特徴 | 不採用理由 |
-|--------|------|------------|
-| **Biome** | 高速なオールインワンツール | まだ成熟途上、TypeScript対応が完全ではない |
-| **deno lint** | Deno組み込み | Node.jsプロジェクトでは使用しにくい |
+### 速度重視の代替構成
 
----
+```
+esbuild + Biome + Vitest + pnpm
+```
 
-## 4. フォーマッター: Prettier
+- CI時間: 約3.5倍高速
+- 設定ファイル: 削減
+- 依存パッケージ: 削減
 
-### 採用理由
-
-- **opinionated**: 設定項目が少なく、一貫したコードスタイルを強制
-- **業界標準**: 最も広く使われているフォーマッター
-- **ESLint統合**: eslint-config-prettier で競合を回避可能
-
-### 代替案
-
-| ツール | 特徴 | 不採用理由 |
-|--------|------|------------|
-| **Biome** | 高速なフォーマッター | まだ普及途上 |
-| **dprint** | 高速なフォーマッター | プラグインが必要、設定がやや複雑 |
-| **ESLint (フォーマット機能)** | リンターのフォーマット機能 | Prettierほど強力ではない |
+詳細は各ADRを参照。
 
 ---
 
-## 5. Node.js ランタイム: Node.js 20
+## 関連ドキュメント
 
-### 採用理由
-
-- **GitHub Actions公式サポート**: `runs.using: 'node20'` が推奨
-- **LTS版**: 長期サポートで安定性が高い
-- **モダンな機能**: ES2022+ の機能が利用可能
-
-### 代替案
-
-| バージョン | 特徴 | 不採用理由 |
-|-----------|------|------------|
-| **Node.js 18** | 前世代LTS | EOL が近い、新しいプロジェクトでは20を推奨 |
-| **Node.js 22** | 最新LTS | GitHub Actions でのサポートがまだ限定的 |
-
----
-
-## 6. パッケージマネージャー: npm
-
-### 採用理由
-
-- **デフォルト**: Node.js に同梱されており追加インストール不要
-- **シンプル**: CI/CDでの設定が容易
-- **GitHub Actions との親和性**: `actions/setup-node` でキャッシュが標準サポート
-
-### 代替案
-
-| ツール | 特徴 | 不採用理由 |
-|--------|------|------------|
-| **pnpm** | 高速、ディスク効率が良い | テンプレートとしてはnpmの方が汎用的 |
-| **yarn** | Facebookが開発 | npm で十分、複雑性が増す |
-| **bun** | 高速なランタイム/パッケージマネージャー | まだ成熟途上、GitHub Actions での実績が少ない |
-
----
-
-## 7. 公式ライブラリ: @actions/core, @actions/github
-
-### 採用理由
-
-- **GitHub公式**: GitHub が提供する公式ツールキット
-- **型定義付き**: TypeScript の型が同梱
-- **安定性**: 広く使われており、ドキュメントも充実
-
-### 代替案
-
-基本的に代替案はありません。これらは GitHub Actions を開発するための公式 SDK であり、使用が強く推奨されます。
-
----
-
-## まとめ
-
-本テンプレートでは、以下の方針で技術選定を行いました：
-
-1. **GitHub公式推奨ツールを優先**: ncc、@actions/core、@actions/github
-2. **モダンで高速なツール**: Vitest
-3. **業界標準ツール**: ESLint、Prettier
-4. **シンプルさ**: 設定を最小限に抑え、すぐに開発を始められる構成
-
-これらの選択により、保守性が高く、CI/CDパイプラインで高速に動作し、かつ新規参入者にも理解しやすいテンプレートを実現しています。
+- [docs/decisions/](./docs/decisions/) - Architecture Decision Records
+- [PROJECT_GENERATORS.md](./PROJECT_GENERATORS.md) - projen等のプロジェクト構成管理ツール比較
