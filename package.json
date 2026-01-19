@@ -4,7 +4,7 @@
   "description": "A template for creating GitHub Actions with TypeScript",
   "main": "dist/index.js",
   "scripts": {
-    "build": "ncc build src/main.ts -o dist --source-map --license licenses.txt",
+    "build": "ncc build src/main.ts -o dist --license licenses.txt",
     "format": "prettier --write '**/*.ts'",
     "format:check": "prettier --check '**/*.ts'",
     "lint": "eslint src/**/*.ts",

@@ -4,7 +4,9 @@ node_modules/
 # Build output (keep dist/ for GitHub Actions)
 lib/
 
-/dist
+# Source maps with absolute paths (environment-dependent)
+dist/*.d.ts.map
+dist/*.js.map
 
 # IDE
 .idea/
